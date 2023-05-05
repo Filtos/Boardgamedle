@@ -1,22 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from "axios";
 import { Autocomplete, TextField, Container } from '@mui/material';
+import './styles/Home.css';
 
 export default function Home() {
     const [todaysGame, setTodaysGame] = useState(null);
-    const primaryName = todaysGame?.name?.find(name => name.type === 'primary')
+
     const options = ['Tokaido', 'Spirit Island'];
+
+    const handleGuess = (gameName) => {
+        if (gameName === todaysGame.name.value) alert('You got it!')
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await axios.get('/api/games/today', { params: { date: new Date()}});
-                await setTodaysGame(response.data);
+                setTodaysGame(response.data);
             } catch (error) {
                 console.error(error);
             }
             };
-            fetchData();
+        fetchData();
     }, []);
 
     return (
@@ -26,10 +31,10 @@ export default function Home() {
                 <Autocomplete
                 id="combo-box"
                 options={options}
-                // sx={{ width: 300 }}
-                renderInput={(params) => <TextField {...params} label="Board Game" />}
+                onInputChange={(event, value) => handleGuess(value)}
+                renderInput={(params) => <TextField {...params} label="Board Game Guess"/>}
                 />
-                Todays game: {primaryName.value}
+                Todays game: {todaysGame.name.value}
             </div>}
         </Container>
     )
