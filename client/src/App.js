@@ -1,5 +1,4 @@
 import React from "react";
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
@@ -8,14 +7,31 @@ function App() {
   React.useEffect(() => {
     fetch("/api")
       .then((res) => res.json())
-      .then((data) => setData(data.message));
+      .then((data) => setData(data));
   }, []);
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>{!data ? "Loading..." : data}</p>
+        {!data ? <p>Loading</p> : 
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Year Published</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.games.map((game) => (
+                <tr key={game.id}>
+                  <td><img src={game.thumbnail.value} alt={game.name.value} /></td>
+                  <td>{game.name.value}</td>
+                  <td>{game.yearpublished.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>}
       </header>
     </div>
   );
