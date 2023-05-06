@@ -61,6 +61,7 @@ function extractGameData(rawData) {
 }
 
 router.get("/hot", async (req, res) => {
+
     const response = await axios.get('https://boardgamegeek.com/xmlapi2/hot?type=boardgame');
     
     const parsed = parser.parse(response.data);
@@ -68,10 +69,26 @@ router.get("/hot", async (req, res) => {
     res.json(parsed.items.item);
 });
 
+router.get("/search", async (req, res) => {
+
+    const { query } = req.query;
+
+    if (query === '') {
+        return res.json('')
+    };
+
+    const response = await axios.get('https://boardgamegeek.com/xmlapi2/search', {params: {query, type: 'boardgame'}});
+    
+    const parsed = parser.parse(response.data);
+
+    res.json(Array.isArray(parsed.items.item) ? parsed.items.item : [parsed.items.item]);
+});
+
 router.get("/today", async (req, res) => {
+
     const { query } = req;
 
-    const bggResponse = await axios.get('https://boardgamegeek.com/xmlapi2/thing?id=123540');
+    const bggResponse = await axios.get('https://boardgamegeek.com/xmlapi2/thing?id=350184');
     
     const parsed = parser.parse(bggResponse.data);
 
