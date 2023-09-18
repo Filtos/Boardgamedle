@@ -36,24 +36,26 @@ function extractGameData(rawData) {
         artists: [],
         publishers: [],
     };
-
+    
     link.map(l => {
         switch (l.type) {
-            case "boardgamecategory": {
-                finalGame.categories.push(l)
-            }
-            case "boardgamemechanic": {
-                finalGame.mechanics.push(l)
-            }
-            case "boardgamedesigner": {
-                finalGame.designers.push(l)
-            }
-            case "boardgameartist": {
-                finalGame.artists.push(l)
-            }
-            case "boardgamepublisher": {
-                finalGame.publishers.push(l)
-            }
+            case "boardgamecategory": 
+                finalGame.categories.push({ ...l, guessed: false})
+                break;
+            case "boardgamemechanic": 
+                finalGame.mechanics.push({ ...l, guessed: false})
+                break;
+            case "boardgamedesigner": 
+                finalGame.designers.push({ ...l, guessed: false})
+                break;
+            case "boardgameartist": 
+                finalGame.artists.push({ ...l, guessed: false})
+                break;
+            case "boardgamepublisher": 
+                finalGame.publishers.push({ ...l, guessed: false})
+                break;
+            default:
+                break;
         }
     })
 
@@ -77,11 +79,19 @@ router.get("/search", async (req, res) => {
         return res.json('')
     };
 
-    const response = await axios.get('https://boardgamegeek.com/xmlapi2/search', {params: {query, type: 'boardgame'}});
-    
-    const parsed = parser.parse(response.data);
+    const config = {
+        params: {
+            q: query,
+            showcount: 10,
+        },
+        headers: {
+            accept: 'application/json, text/plain, */*'
+        }
+    }
 
-    res.json(Array.isArray(parsed.items.item) ? parsed.items.item : [parsed.items.item]);
+    const response = await axios.get('https://boardgamegeek.com/search/boardgame', config)
+
+    res.json(response.data.items)
 });
 
 router.get("/today", async (req, res) => {
