@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import { 
     Autocomplete,
@@ -9,15 +9,20 @@ import {
     CardContent,
     List,
     ListItem,
-    ListItemText,
+    // ListItemText,
     Typography,
+    CircularProgress,
 } from '@mui/material';
 import './styles/Home.css';
 
 export default function Home() {
     const [todaysGame, setTodaysGame] = useState(null);
     const [searchValue, setSearchValue] = useState('');
-    const [options, setOptions] = useState([])
+    const [options, setOptions] = useState([]);
+    const [guesses, setGuesses] = useState([]);
+    const [open, setOpen] = React.useState(false);
+    const loading = open && searchValue && options.length === 0;
+
 
     useEffect(() => {
         const fetchTodaysData = async () => {
@@ -31,12 +36,17 @@ export default function Home() {
         fetchTodaysData();
     }, []);
 
-    const handleGuess = (value) => {
-        console.log('OPTIONS', options)
-        console.log('HANDLE GUESS', value)
-        console.log('WHAT IS TODATYS GAME', todaysGame)
+    const onChange = (value) => {
         setOptions([])
         setSearchValue('')
+        if (value) {
+            handleGuess(value)
+        }
+    }
+
+    const handleGuess = (value) => {
+        console.log('RUNNING HANDLE GUESS', value)
+        setGuesses([...guesses, value])
     }
 
     useEffect(() => {
@@ -54,7 +64,7 @@ export default function Home() {
             }
         };
         // Set timeout on how long to wait until the search call is made
-        const timeOutId = setTimeout(() => fetchSearchData(), 250);
+        const timeOutId = setTimeout(() => fetchSearchData(), 300);
         return () => clearTimeout(timeOutId);
       }, [searchValue]);
 
@@ -68,16 +78,55 @@ export default function Home() {
                     />
                     <CardContent sx={{ flex: '1 0 auto' }}>
                         <Autocomplete
-                            inputValue={searchValue}
                             id="autocomplete-search"
+                            inputValue={searchValue}
+                            freeSolo
+                            selectOnFocus
+                            clearOnBlur
+                            handleHomeEndKeys
+                            open={open}
+                            onOpen={() => {
+                                setOpen(true);
+                            }}
+                            onClose={() => {
+                                setOpen(false);
+                            }}
+                            onInputChange={(event, newSearchValue) => setSearchValue(newSearchValue)}
                             options={options}
                             getOptionLabel={(option) => `${option?.name} (${option?.yearpublished})`}
-                            onInputChange={(event, value) => setSearchValue(value)}
-                            onChange={(event, value) => handleGuess(value)}
-                            renderInput={(params) => <TextField {...params} label="Search" variant="outlined"/>}
+                            filterOptions={(x) => x}
+                            renderInput={(params) => (
+                                <TextField 
+                                    {...params}
+                                    label="Search"
+                                    variant="outlined"
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        endAdornment: (
+                                          <React.Fragment>
+                                            {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                            {params.InputProps.endAdornment}
+                                          </React.Fragment>
+                                        ),
+                                      }}/>
+                            )}
+                            onChange={(event, value) => onChange(value)}
                             />
                     </CardContent>
                 </Card>
+                {guesses.length ? 
+                <Card className='contentCard'>
+                <CardHeader 
+                title="Previous guesses:"
+                />
+                <CardContent sx={{ flex: '1 0 auto' }}>
+                    <List>
+                    {guesses.map((game, index) => (<ListItem key={game.id}>
+                        <Typography component="div" variant="h5">{index + 1}. {game.name} ({game.yearpublished})</Typography>
+                    </ListItem>))}
+                    </List>
+                </CardContent>
+                </Card> : null}
 
                 <Card className='contentCard'>
                     <CardHeader 
