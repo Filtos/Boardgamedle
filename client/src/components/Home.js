@@ -9,20 +9,21 @@ import {
     CardContent,
     List,
     ListItem,
-    // ListItemText,
     Typography,
     CircularProgress,
 } from '@mui/material';
 import './styles/Home.css';
+import ListCard from './ListCard';
+import Confetti from 'react-confetti'
 
 export default function Home() {
     const [todaysGame, setTodaysGame] = useState(null);
     const [searchValue, setSearchValue] = useState('');
     const [options, setOptions] = useState([]);
     const [guesses, setGuesses] = useState([]);
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
     const loading = open && searchValue && options.length === 0;
-
+    const [guessedCorrectly, setGuessedCorrectly] = useState(false);
 
     useEffect(() => {
         const fetchTodaysData = async () => {
@@ -44,9 +45,29 @@ export default function Home() {
         }
     }
 
-    const handleGuess = (value) => {
-        console.log('RUNNING HANDLE GUESS', value)
-        setGuesses([...guesses, value])
+    const setGuessedArrayFields = (answerArray, guessArray) => {
+        answerArray.forEach(aField => {
+            if (!aField.guessed && guessArray.find(gField => gField.id === aField.id)) aField.guessed = true;
+        })
+    }
+
+    const handleGuess = async (newGuess) => {
+        if (newGuess.id === todaysGame.id) {
+            setGuessedCorrectly(true);
+            return;
+        }
+        // If duplicate guessed game
+        if (guesses.find(g => g.id === newGuess.id)) return;
+
+        let cloneGame = { ...todaysGame };
+        const { data } = await axios.get(`/api/games/${cloneGame.id}`);
+        setGuessedArrayFields(cloneGame.designers, data.designers)
+        setGuessedArrayFields(cloneGame.publishers, data.publishers)
+        setGuessedArrayFields(cloneGame.categories, data.categories)
+        setGuessedArrayFields(cloneGame.artists, data.artists)
+        setGuesses([...guesses, newGuess])
+        setTodaysGame(cloneGame)
+        setSearchValue('')
     }
 
     useEffect(() => {
@@ -69,7 +90,8 @@ export default function Home() {
       }, [searchValue]);
 
     return (
-        <Container component="main" maxWidth="xs">
+        <Container component="main">
+            {guessedCorrectly ? <Confetti /> : null}
             {!todaysGame ? <p>Loading...</p> : 
             <Container>
                 <Card className='contentCard'>
@@ -114,6 +136,7 @@ export default function Home() {
                             />
                     </CardContent>
                 </Card>
+                Todays game: {todaysGame?.name?.value}
                 {guesses.length ? 
                 <Card className='contentCard'>
                 <CardHeader 
@@ -128,32 +151,11 @@ export default function Home() {
                 </CardContent>
                 </Card> : null}
 
-                <Card className='contentCard'>
-                    <CardHeader 
-                    title="Designer:"
-                    />
-                    <CardContent sx={{ flex: '1 0 auto' }}>
-                        <List>
-                        {todaysGame?.designers.map(designer => (<ListItem key={designer.id}>
-                            <Typography component="div" variant="h5">{designer.guessed ? designer.value : designer.value.replace(/\S/g, "*")}</Typography>
-                        </ListItem>))}
-                        </List>
-                    </CardContent>
-                </Card>
-
-                <Card className='contentCard'>
-                    <CardHeader 
-                    title="Publisher:"
-                    />
-                    <CardContent sx={{ flex: '1 0 auto' }}>
-                        <List>
-                        {todaysGame?.publishers.map(publisher => (<ListItem key={publisher.id}>
-                            <Typography component="div" variant="h5">{publisher.guessed ? publisher.value : publisher.value.replace(/\S/g, "*")}</Typography>
-                        </ListItem>))}
-                        </List>
-                    </CardContent>
-                </Card>
-                Todays game: {todaysGame?.name?.value}
+                <ListCard title="Categories:" list={todaysGame?.categories} />
+                <ListCard title="Mechanics:" list={todaysGame?.mechanics} />
+                <ListCard title="Designer/s:" list={todaysGame?.designers} />
+                <ListCard title="Publisher/s:" list={todaysGame?.publishers} />
+                <ListCard title="Artsit/s:" list={todaysGame?.artists} />
             </Container>}
         </Container>
     )

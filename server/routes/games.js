@@ -95,10 +95,19 @@ router.get("/search", async (req, res) => {
 });
 
 router.get("/today", async (req, res) => {
-
     const { query } = req;
 
     const bggResponse = await axios.get('https://boardgamegeek.com/xmlapi2/thing?id=350184');
+    
+    const parsed = parser.parse(bggResponse.data);
+
+    res.json(extractGameData(parsed.items.item));
+});
+
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    const bggResponse = await axios.get(`https://boardgamegeek.com/xmlapi2/thing?id=${id}`);
     
     const parsed = parser.parse(bggResponse.data);
 
