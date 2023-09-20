@@ -52,22 +52,23 @@ export default function Home() {
     }
 
     const handleGuess = async (newGuess) => {
-        if (newGuess.id === todaysGame.id) {
-            setGuessedCorrectly(true);
-            return;
-        }
         // If duplicate guessed game
         if (guesses.find(g => g.id === newGuess.id)) return;
 
         let cloneGame = { ...todaysGame };
-        const { data } = await axios.get(`/api/games/${cloneGame.id}`);
+        const { data } = await axios.get(`/api/games/${newGuess.id}`);
         setGuessedArrayFields(cloneGame.designers, data.designers)
         setGuessedArrayFields(cloneGame.publishers, data.publishers)
         setGuessedArrayFields(cloneGame.categories, data.categories)
         setGuessedArrayFields(cloneGame.artists, data.artists)
+        setGuessedArrayFields(cloneGame.mechanics, data.mechanics)
         setGuesses([...guesses, newGuess])
         setTodaysGame(cloneGame)
         setSearchValue('')
+        // If guess is correct
+        if (newGuess.id === todaysGame.id) {
+            setGuessedCorrectly(true);
+        }
     }
 
     useEffect(() => {
@@ -154,8 +155,8 @@ export default function Home() {
                 <ListCard title="Categories:" list={todaysGame?.categories} />
                 <ListCard title="Mechanics:" list={todaysGame?.mechanics} />
                 <ListCard title="Designer/s:" list={todaysGame?.designers} />
-                <ListCard title="Publisher/s:" list={todaysGame?.publishers} />
                 <ListCard title="Artsit/s:" list={todaysGame?.artists} />
+                <ListCard title="Publisher/s:" list={todaysGame?.publishers} />
             </Container>}
         </Container>
     )
